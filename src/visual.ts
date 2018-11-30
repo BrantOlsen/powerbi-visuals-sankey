@@ -190,6 +190,10 @@ module powerbi.extensibility.visual {
             left: 10
         };
 
+        private static hoverOpactiy: number = 0.9;
+        private static normalOpacity: number = 0.7;
+        private static nonHoverOpacity: number = 0.2;
+
         private nodeWidth: number = 21.5;
         private curvatureOfLinks: number = 0.5;
 
@@ -229,8 +233,27 @@ module powerbi.extensibility.visual {
                     : SankeyDiagramLabelsSettings.DefaultFontSize)
             };
         }
+        private host: IVisualHost;
+        private svg: d3.Selection<SVGElement>;
+        private container: d3.Selection<SVGElement>;
+        private circle: d3.Selection<SVGElement>;
+        private textValue: d3.Selection<SVGElement>;
+        private textLabel: d3.Selection<SVGElement>;
 
         constructor(options: VisualConstructorOptions) {
+            /*
+            this.svg = d3.select(options.element)
+            .append('svg')
+            .classed('circleCard', true);
+this.container = this.svg.append("g")
+                    .classed('container', true);
+this.circle = this.container.append("circle")
+                        .classed('circle', true);
+this.textValue = this.container.append("text")
+                            .classed("textValue", true);
+this.textLabel = this.container.append("text")
+                            .classed("textLabel", true);*/
+
             this.init(options);
         }
 
@@ -264,6 +287,45 @@ module powerbi.extensibility.visual {
             this.nodes = this.main
                 .append("g")
                 .classed(SankeyDiagram.NodesSelector.class, true);
+        }
+
+        public testupdate(options: VisualUpdateOptions): void {
+            let width: number = options.viewport.width;
+            let height: number = options.viewport.height;
+            this.svg.attr({
+                width: width,
+                height: height
+            });
+            let radius: number = Math.min(width, height) / 2.2;
+            this.circle
+                .style("fill", "white")
+                .style("fill-opacity", 0.5)
+                .style("stroke", "black")
+                .style("stroke-width", 2)
+                .attr({
+                    r: radius,
+                    cx: width / 2,
+                    cy: height / 2
+                });
+            let fontSizeValue: number = Math.min(width, height) / 5;
+            this.textValue
+                .text("Value")
+                .attr({
+                    x: "50%",
+                    y: "50%",
+                    dy: "0.35em",
+                    "text-anchor": "middle"
+                }).style("font-size", fontSizeValue + "px");
+            let fontSizeLabel: number = fontSizeValue / 4;
+            this.textLabel
+                .text("Label")
+                .attr({
+                    x: "50%",
+                    y: height / 2,
+                    dy: fontSizeValue / 1.2,
+                    "text-anchor": "middle"
+                })
+                .style("font-size", fontSizeLabel + "px");
         }
 
         public update(visualUpdateOptions: VisualUpdateOptions): void {
@@ -653,6 +715,7 @@ module powerbi.extensibility.visual {
                         outputWeight: 0,
                         backwardWeight: 0,
                         selftLinkWeight: 0,
+                        opactiy: SankeyDiagram.normalOpacity,
                         width: this.nodeWidth,
                         height: 0,
                         fillColor: nodeFillColor,
@@ -1463,10 +1526,12 @@ module powerbi.extensibility.visual {
                 .append("text")
                 .classed(SankeyDiagram.NodeLabelSelector.class, true);
 
+            let self = this;
             nodesSelection
                 .select(SankeyDiagram.NodeRectSelector.selector)
                 .style({
                     "fill": (node: SankeyDiagramNode) => node.fillColor,
+                    "opacity": (node: SankeyDiagramNode) => node.opactiy,
                     "stroke": (node: SankeyDiagramNode) => this.colorHelper.isHighContrast ? node.strokeColor :
                         d3.rgb(node.fillColor)
                             .darker(SankeyDiagram.StrokeColorFactor)
@@ -1477,7 +1542,26 @@ module powerbi.extensibility.visual {
                     y: SankeyDiagram.DefaultPosition,
                     height: (node: SankeyDiagramNode) => node.height < SankeyDiagram.MinHeightOfNode ? SankeyDiagram.MinHeightOfNode : node.height,
                     width: (node: SankeyDiagramNode) => node.width
-                });
+                })
+                .on("mouseover", function(node: SankeyDiagramNode) {
+                    d3.selectAll(SankeyDiagram.NodeRectSelector.selector).each((datum) => {
+                        datum.opacity = SankeyDiagram.nonHoverOpacity;
+                    });
+                    node.links.forEach((link: SankeyDiagramLink) => {
+                        // select link svg element by ID generated in link creation as Source-Destination
+                        d3.select(`#${SankeyDiagram.createLink(link, true)}`).style("opacity", .9);
+                        d3.select(`#${SankeyDiagram.createLink(link)}`).style("opacity", .9);
+                        link.source.opactiy = SankeyDiagram.hoverOpactiy;
+                        link.destination.opactiy = SankeyDiagram.hoverOpactiy;
+                    });
+                    self.renderNodes(sankeyDiagramDataView);
+                })
+                .on("mouseout", (node: SankeyDiagramNode) => {
+                    d3.selectAll(SankeyDiagram.LinkSelector.selector).transition().duration(10).style("opacity", .5);
+                    d3.selectAll(SankeyDiagram.NodeRectSelector.selector).each((datum) => {
+                        datum.opacity = SankeyDiagram.normalOpacity;
+                    });
+                  });
 
             nodesSelection
                 .select(SankeyDiagram.NodeLabelSelector.selector)
@@ -2171,7 +2255,7 @@ module powerbi.extensibility.visual {
         private updateSelectionState(
             nodesSelection: Selection<SankeyDiagramNode>,
             linksSelection: Selection<SankeyDiagramLink>): void {
-
+/*
             sankeyDiagramUtils.updateFillOpacity(
                 nodesSelection,
                 this.interactivityService,
@@ -2181,6 +2265,7 @@ module powerbi.extensibility.visual {
                 linksSelection,
                 this.interactivityService,
                 true);
+                */
         }
 
         private bindSelectionHandler(

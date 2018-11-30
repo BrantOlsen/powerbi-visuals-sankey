@@ -111,6 +111,7 @@ module powerbi.extensibility.visual {
         }
 
         public renderSelection(hasSelection: boolean): void {
+            /*
             sankeyDiagramUtils.updateFillOpacity(
                 this.behaviorOptions.links,
                 this.behaviorOptions.interactivityService,
@@ -120,6 +121,7 @@ module powerbi.extensibility.visual {
                 this.behaviorOptions.nodes,
                 this.behaviorOptions.interactivityService,
                 hasSelection);
+                */
         }
     }
 }

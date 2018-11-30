@@ -79,7 +79,8 @@ module powerbi.extensibility.visual {
             selection: Selection<SankeyDiagramNode | SankeyDiagramLink>,
             interactivityService?: IInteractivityService,
             hasSelection: boolean = false): void {
-
+                return;
+/*
             let hasHighlights: boolean = false;
 
             if (interactivityService) {
@@ -100,7 +101,7 @@ module powerbi.extensibility.visual {
                     false,
                     hasSelection,
                     !selected && hasHighlights);
-            });
+            });*/
         }
 
         export function areDataPointsSelected(

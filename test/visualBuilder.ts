@@ -30,12 +30,12 @@ module powerbi.extensibility.visual.test {
     // powerbi.extensibility.utils.test
     import VisualBuilderBase = powerbi.extensibility.utils.test.VisualBuilderBase;
 
-    // SankeyDiagram1446463184954
-    import VisualClass = powerbi.extensibility.visual.SankeyDiagram1446463184954.SankeyDiagram;
+    // HVHSankeyDiagram1446463184954
+    import VisualClass = powerbi.extensibility.visual.HVHSankeyDiagram1446463184954.SankeyDiagram;
 
     export class SankeyDiagramBuilder extends VisualBuilderBase<VisualClass> {
         constructor(width: number, height: number) {
-            super(width, height, "SankeyDiagram1446463184954");
+            super(width, height, "HVHSankeyDiagram1446463184954");
         }
 
         protected build(options: VisualConstructorOptions) {
