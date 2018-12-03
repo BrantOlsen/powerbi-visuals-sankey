@@ -84,6 +84,7 @@ module powerbi.extensibility.visual {
         destination: SankeyDiagramNode;
         weigth: number;
         height?: number;
+        opacity: number;
         dySource?: number;
         dyDestination?: number;
         fillColor: string;

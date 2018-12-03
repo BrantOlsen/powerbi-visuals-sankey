@@ -729,6 +729,37 @@ this.textLabel = this.container.append("text")
             return nodes;
         }
 
+        private resetHoverAndHighlight(sankeyDiagramDataView: SankeyDiagramDataView, opacity: number): void {
+            sankeyDiagramDataView.nodes.forEach((node: SankeyDiagramNode) => {
+                node.opactiy = opacity;
+            });
+            sankeyDiagramDataView.links.forEach((link: SankeyDiagramLink) => {
+                link.opacity = opacity;
+            });
+        };
+
+        private hoverNodeAndHighlight(node: SankeyDiagramNode, doForward: boolean, doBackward: boolean): void {
+            // Prevent loops
+            if (node.opactiy === SankeyDiagram.hoverOpactiy) {
+                return;
+            }
+
+            node.opactiy = SankeyDiagram.hoverOpactiy;
+            node.links.forEach((link: SankeyDiagramLink) => {
+                // Only highlight links when going backwards that are connected to the already highlighed nodes.
+                if (doBackward) {
+                    if (link.destination.opactiy === SankeyDiagram.hoverOpactiy) {
+                        link.opacity = SankeyDiagram.hoverOpactiy;
+                    }
+                    this.hoverNodeAndHighlight(link.source, false, true);
+                }
+                if (doForward) {
+                    link.opacity = SankeyDiagram.hoverOpactiy;
+                    this.hoverNodeAndHighlight(link.destination, true, false);
+                }
+            });
+        };
+
         private createLinks(
             nodes: SankeyDiagramNode[],
             selectionIdBuilder: SankeyDiagramSelectionIdBuilder,
@@ -809,6 +840,7 @@ this.textLabel = this.container.append("text")
                     weigth: dataPoint.weigth,
                     height: dataPoint.weigth,
                     fillColor: linkFillColor,
+                    opacity: SankeyDiagram.normalOpacity,
                     strokeColor: linkStrokeColor,
                     dySource: 0,
                     dyDestination: 0,
@@ -1526,7 +1558,8 @@ this.textLabel = this.container.append("text")
                 .append("text")
                 .classed(SankeyDiagram.NodeLabelSelector.class, true);
 
-            let self = this;
+            
+
             nodesSelection
                 .select(SankeyDiagram.NodeRectSelector.selector)
                 .style({
@@ -1543,25 +1576,17 @@ this.textLabel = this.container.append("text")
                     height: (node: SankeyDiagramNode) => node.height < SankeyDiagram.MinHeightOfNode ? SankeyDiagram.MinHeightOfNode : node.height,
                     width: (node: SankeyDiagramNode) => node.width
                 })
-                .on("mouseover", function(node: SankeyDiagramNode) {
-                    d3.selectAll(SankeyDiagram.NodeRectSelector.selector).each((datum) => {
-                        datum.opacity = SankeyDiagram.nonHoverOpacity;
-                    });
-                    node.links.forEach((link: SankeyDiagramLink) => {
-                        // select link svg element by ID generated in link creation as Source-Destination
-                        d3.select(`#${SankeyDiagram.createLink(link, true)}`).style("opacity", .9);
-                        d3.select(`#${SankeyDiagram.createLink(link)}`).style("opacity", .9);
-                        link.source.opactiy = SankeyDiagram.hoverOpactiy;
-                        link.destination.opactiy = SankeyDiagram.hoverOpactiy;
-                    });
-                    self.renderNodes(sankeyDiagramDataView);
+                .on("mouseover", (node: SankeyDiagramNode) => {
+                    this.resetHoverAndHighlight(sankeyDiagramDataView, SankeyDiagram.nonHoverOpacity);
+                    this.hoverNodeAndHighlight(node, true, true);
+                    this.renderNodes(sankeyDiagramDataView);
+                    this.renderLinks(sankeyDiagramDataView);
                 })
                 .on("mouseout", (node: SankeyDiagramNode) => {
-                    d3.selectAll(SankeyDiagram.LinkSelector.selector).transition().duration(10).style("opacity", .5);
-                    d3.selectAll(SankeyDiagram.NodeRectSelector.selector).each((datum) => {
-                        datum.opacity = SankeyDiagram.normalOpacity;
-                    });
-                  });
+                    this.resetHoverAndHighlight(sankeyDiagramDataView, SankeyDiagram.normalOpacity);
+                    this.renderNodes(sankeyDiagramDataView);
+                    this.renderLinks(sankeyDiagramDataView);
+                });
 
             nodesSelection
                 .select(SankeyDiagram.NodeLabelSelector.selector)
@@ -1831,8 +1856,23 @@ this.textLabel = this.container.append("text")
                 })
                 .style({
                     "stroke": (link: SankeyDiagramLink) => link.strokeColor,
-                    "fill": (link: SankeyDiagramLink) => link.fillColor
+                    "fill": (link: SankeyDiagramLink) => link.fillColor,
+                    "opacity": (link: SankeyDiagramLink) => link.opacity
                 });
+
+            linksSelection.on("mouseover", (link: SankeyDiagramLink) => {
+                this.resetHoverAndHighlight(sankeyDiagramDataView, SankeyDiagram.nonHoverOpacity);
+                link.opacity = SankeyDiagram.hoverOpactiy;
+                this.hoverNodeAndHighlight(link.destination, true, false);
+                this.hoverNodeAndHighlight(link.source, false, true);
+                this.renderNodes(sankeyDiagramDataView);
+                this.renderLinks(sankeyDiagramDataView);
+            })
+            .on("mouseout", (link: SankeyDiagramLink) => {
+                this.resetHoverAndHighlight(sankeyDiagramDataView, SankeyDiagram.normalOpacity);
+                this.renderNodes(sankeyDiagramDataView);
+                this.renderLinks(sankeyDiagramDataView);
+            });
 
             linksSelection
                 .exit()
