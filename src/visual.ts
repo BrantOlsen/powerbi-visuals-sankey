@@ -191,8 +191,8 @@ module powerbi.extensibility.visual {
         };
 
         private static hoverOpactiy: number = 0.9;
-        private static normalOpacity: number = 0.7;
-        private static nonHoverOpacity: number = 0.2;
+        private static normalOpacity: number = 0.9;
+        private static nonHoverOpacity: number = 0.3;
 
         private nodeWidth: number = 21.5;
         private curvatureOfLinks: number = 0.5;
@@ -241,19 +241,6 @@ module powerbi.extensibility.visual {
         private textLabel: d3.Selection<SVGElement>;
 
         constructor(options: VisualConstructorOptions) {
-            /*
-            this.svg = d3.select(options.element)
-            .append('svg')
-            .classed('circleCard', true);
-this.container = this.svg.append("g")
-                    .classed('container', true);
-this.circle = this.container.append("circle")
-                        .classed('circle', true);
-this.textValue = this.container.append("text")
-                            .classed("textValue", true);
-this.textLabel = this.container.append("text")
-                            .classed("textLabel", true);*/
-
             this.init(options);
         }
 
@@ -262,6 +249,12 @@ this.textLabel = this.container.append("text")
             this.localizationManager = this.visualHost.createLocalizationManager();
 
             this.root = d3.select(options.element)
+                .on("touchstart", () => {
+                    (<any>d3.event).preventDefault();
+                })
+                .on("touchmove", () => {
+                    (<any>d3.event).preventDefault();
+                })
                 .append("svg")
                 .classed(SankeyDiagram.ClassName, true);
 
@@ -1612,6 +1605,11 @@ this.textLabel = this.container.append("text")
                     this.renderLinks(sankeyDiagramDataView);
                 })
                 .on("click", (node: SankeyDiagramNode) => {
+                    // dragged
+                    if ((<any>d3.event).defaultPrevented) {
+                        return;
+                    }
+
                     // If anything is hidden then toggle everything back on.
                     if (sankeyDiagramDataView.nodes.filter(n => n.hide).length > 0) {
                         this.setHideValueForAllNodesAndLinks(sankeyDiagramDataView, false);
@@ -1795,7 +1793,7 @@ this.textLabel = this.container.append("text")
         private saveNodePositions(nodes: SankeyDiagramNode[]): void {
             let nodePositions: SankeyDiagramNodePositionSetting[] = [];
             nodes.forEach((node: SankeyDiagramNode) => {
-                if (node.height === 0) {
+                if (node.height === 0 || node.hide) {
                     return;
                 }
                 let settings: SankeyDiagramNodePositionSetting = <SankeyDiagramNodePositionSetting>{
