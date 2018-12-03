@@ -70,6 +70,7 @@ module powerbi.extensibility.visual {
         height?: number;
         fillColor: string;
         opactiy: number;
+        hide: boolean;
         strokeColor: string;
         selectableDataPoints?: SelectableDataPoint[];
         cloneLink?: SankeyDiagramNode;
@@ -85,6 +86,7 @@ module powerbi.extensibility.visual {
         weigth: number;
         height?: number;
         opacity: number;
+        hide: boolean;
         dySource?: number;
         dyDestination?: number;
         fillColor: string;

@@ -716,6 +716,7 @@ this.textLabel = this.container.append("text")
                         backwardWeight: 0,
                         selftLinkWeight: 0,
                         opactiy: SankeyDiagram.normalOpacity,
+                        hide: false,
                         width: this.nodeWidth,
                         height: 0,
                         fillColor: nodeFillColor,
@@ -727,6 +728,30 @@ this.textLabel = this.container.append("text")
             });
 
             return nodes;
+        }
+
+        private setHideValueForAllNodesAndLinks(sankeyDiagramDataView: SankeyDiagramDataView, hideValue: boolean): void {
+            sankeyDiagramDataView.nodes.forEach(n => {
+                n.hide = hideValue;
+            });
+            sankeyDiagramDataView.links.forEach((n: SankeyDiagramLink) => {
+                n.hide = hideValue;
+            });
+        }
+
+        private clickLinkAndShowChildren(link: SankeyDiagramLink): void {
+            link.hide = false;
+            this.clickNodeAndShowChildren(link.destination);
+        }
+
+        private clickNodeAndShowChildren(node: SankeyDiagramNode): void {
+            node.hide = false;
+            node.links.forEach((link: SankeyDiagramLink) => {
+                if (link.source.label === node.label) {
+                    link.hide = false;
+                    this.clickNodeAndShowChildren(link.destination);
+                }
+            });
         }
 
         private resetHoverAndHighlight(sankeyDiagramDataView: SankeyDiagramDataView, opacity: number): void {
@@ -841,6 +866,7 @@ this.textLabel = this.container.append("text")
                     height: dataPoint.weigth,
                     fillColor: linkFillColor,
                     opacity: SankeyDiagram.normalOpacity,
+                    hide: false,
                     strokeColor: linkStrokeColor,
                     dySource: 0,
                     dyDestination: 0,
@@ -1537,7 +1563,7 @@ this.textLabel = this.container.append("text")
                 .selectAll(SankeyDiagram.NodeSelector.selector);
 
             nodesSelection = nodeElements.data(sankeyDiagramDataView.nodes.filter((node: SankeyDiagramNode) => {
-                return node.height > SankeyDiagram.MinSize;
+                return node.height > SankeyDiagram.MinSize && !node.hide;
             }));
 
             nodesEnterSelection = nodesSelection
@@ -1557,8 +1583,6 @@ this.textLabel = this.container.append("text")
             nodesEnterSelection
                 .append("text")
                 .classed(SankeyDiagram.NodeLabelSelector.class, true);
-
-            
 
             nodesSelection
                 .select(SankeyDiagram.NodeRectSelector.selector)
@@ -1584,6 +1608,19 @@ this.textLabel = this.container.append("text")
                 })
                 .on("mouseout", (node: SankeyDiagramNode) => {
                     this.resetHoverAndHighlight(sankeyDiagramDataView, SankeyDiagram.normalOpacity);
+                    this.renderNodes(sankeyDiagramDataView);
+                    this.renderLinks(sankeyDiagramDataView);
+                })
+                .on("click", (node: SankeyDiagramNode) => {
+                    // If anything is hidden then toggle everything back on.
+                    if (sankeyDiagramDataView.nodes.filter(n => n.hide).length > 0) {
+                        this.setHideValueForAllNodesAndLinks(sankeyDiagramDataView, false);
+                    }
+                    else {
+                        this.setHideValueForAllNodesAndLinks(sankeyDiagramDataView, true);
+                        this.clickNodeAndShowChildren(node);
+                    }
+
                     this.renderNodes(sankeyDiagramDataView);
                     this.renderLinks(sankeyDiagramDataView);
                 });
@@ -1817,7 +1854,7 @@ this.textLabel = this.container.append("text")
                 .selectAll(SankeyDiagram.LinkSelector.selector);
 
             linksSelection = linksElements.data(sankeyDiagramDataView.links.filter((link: SankeyDiagramLink) => {
-                return link.height > SankeyDiagram.MinSize;
+                return link.height > SankeyDiagram.MinSize && !link.hide;
             }).sort((a: SankeyDiagramLink, b: SankeyDiagramLink) => {
                 // sort links to draw forward links in the first, backward links draw as second and selflinks as the last
                 // in this case self links will be on front side
@@ -1870,6 +1907,19 @@ this.textLabel = this.container.append("text")
             })
             .on("mouseout", (link: SankeyDiagramLink) => {
                 this.resetHoverAndHighlight(sankeyDiagramDataView, SankeyDiagram.normalOpacity);
+                this.renderNodes(sankeyDiagramDataView);
+                this.renderLinks(sankeyDiagramDataView);
+            })
+            .on("click", (link: SankeyDiagramLink) => {
+                // If anything is hidden then toggle everything back on.
+                if (sankeyDiagramDataView.nodes.filter(n => n.hide).length > 0) {
+                    this.setHideValueForAllNodesAndLinks(sankeyDiagramDataView, false);
+                }
+                else {
+                    this.setHideValueForAllNodesAndLinks(sankeyDiagramDataView, true);
+                    link.source.hide = false;
+                    this.clickLinkAndShowChildren(link);
+                }
                 this.renderNodes(sankeyDiagramDataView);
                 this.renderLinks(sankeyDiagramDataView);
             });
