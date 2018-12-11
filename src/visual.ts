@@ -732,17 +732,29 @@ module powerbi.extensibility.visual {
             });
         }
 
-        private clickLinkAndShowChildren(link: SankeyDiagramLink): void {
-            link.hide = false;
-            this.clickNodeAndShowChildren(link.destination);
-        }
+        private clickNodeAndShowChildren(node: SankeyDiagramNode, doForward: boolean, doBackward: boolean): void {
+            console.log("clickNodeAndShowChildren: node=" + node.label.name + ", doForward=" + doForward + ", doBackward=" + doBackward + ", linkCount=" + node.links.length);
+            // Prevent loops.
+            if (!node.hide) {
+                return;
+            }
 
-        private clickNodeAndShowChildren(node: SankeyDiagramNode): void {
             node.hide = false;
             node.links.forEach((link: SankeyDiagramLink) => {
-                if (link.source.label === node.label) {
+                console.log("nodeLinks: destLabel=" + link.destination.label.name + ", destHide=" + link.destination.hide +
+                            ", sourceLabel=" + link.source.label.name + ", sourceHide=" + link.source.hide);
+                if (doForward) {
+                    console.log("Forward logic.");
                     link.hide = false;
-                    this.clickNodeAndShowChildren(link.destination);
+                    this.clickNodeAndShowChildren(link.destination, true, false);
+                }
+                if (doBackward && link.destination.label.name === node.label.name) {
+                    console.log("Backward logic.");
+                    link.hide = false;
+                    this.clickNodeAndShowChildren(link.source, false, true);
+                }
+                if (link.hide) {
+                    console.log("Link not hidden.");
                 }
             });
         }
@@ -1616,7 +1628,7 @@ module powerbi.extensibility.visual {
                     }
                     else {
                         this.setHideValueForAllNodesAndLinks(sankeyDiagramDataView, true);
-                        this.clickNodeAndShowChildren(node);
+                        this.clickNodeAndShowChildren(node, true, true);
                     }
 
                     this.renderNodes(sankeyDiagramDataView);
@@ -1915,8 +1927,9 @@ module powerbi.extensibility.visual {
                 }
                 else {
                     this.setHideValueForAllNodesAndLinks(sankeyDiagramDataView, true);
-                    link.source.hide = false;
-                    this.clickLinkAndShowChildren(link);
+                    link.hide = false;
+                    this.clickNodeAndShowChildren(link.destination, true, false);
+                    this.clickNodeAndShowChildren(link.source, false, true);
                 }
                 this.renderNodes(sankeyDiagramDataView);
                 this.renderLinks(sankeyDiagramDataView);
