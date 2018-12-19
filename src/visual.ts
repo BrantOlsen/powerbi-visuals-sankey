@@ -743,13 +743,11 @@ module powerbi.extensibility.visual {
             node.links.forEach((link: SankeyDiagramLink) => {
                 console.log("nodeLinks: destLabel=" + link.destination.label.name + ", destHide=" + link.destination.hide +
                             ", sourceLabel=" + link.source.label.name + ", sourceHide=" + link.source.hide);
-                if (doForward) {
-                    console.log("Forward logic.");
+                if (doForward && link.source.label.name === node.label.name) {
                     link.hide = false;
                     this.clickNodeAndShowChildren(link.destination, true, false);
                 }
                 if (doBackward && link.destination.label.name === node.label.name) {
-                    console.log("Backward logic.");
                     link.hide = false;
                     this.clickNodeAndShowChildren(link.source, false, true);
                 }
@@ -776,16 +774,15 @@ module powerbi.extensibility.visual {
 
             node.opactiy = SankeyDiagram.hoverOpactiy;
             node.links.forEach((link: SankeyDiagramLink) => {
-                // Only highlight links when going backwards that are connected to the already highlighed nodes.
-                if (doBackward) {
-                    if (link.destination.opactiy === SankeyDiagram.hoverOpactiy) {
-                        link.opacity = SankeyDiagram.hoverOpactiy;
-                    }
-                    this.hoverNodeAndHighlight(link.source, false, true);
-                }
-                if (doForward) {
+                // Only highlight foward links when going forwards otherwise addtional back links get highlighted.
+                if (doForward && link.source.label.name === node.label.name) {
                     link.opacity = SankeyDiagram.hoverOpactiy;
                     this.hoverNodeAndHighlight(link.destination, true, false);
+                }
+                // Only highlight links when going backwards that are connected to the already highlighed nodes.
+                if (doBackward && link.destination.label.name === node.label.name) {
+                    link.opacity = SankeyDiagram.hoverOpactiy;
+                    this.hoverNodeAndHighlight(link.source, false, true);
                 }
             });
         };
