@@ -89,7 +89,8 @@ module powerbi.extensibility.visual {
         }
 
         private bindClickEventToLinks(): void {
-            this.behaviorOptions.links.on("click", (link: SankeyDiagramLink) => {
+            this.behaviorOptions.links.on("click.behavior", (link: SankeyDiagramLink) => {
+                console.log("click.behavior");
                 this.selectionHandler.handleSelection(link, (d3.event as MouseEvent).ctrlKey);
                 this.createAnEmptySelectedDataPoints();
             });

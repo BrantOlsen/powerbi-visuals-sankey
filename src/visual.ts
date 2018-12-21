@@ -1911,7 +1911,7 @@ module powerbi.extensibility.visual {
                 this.renderNodes(sankeyDiagramDataView);
                 this.renderLinks(sankeyDiagramDataView);
             })
-            .on("click.filter", (link: SankeyDiagramLink) => {
+            .on("click.filter", (link: SankeyDiagramLink, index: number, outerIndex: number) => {
                 console.log("click.filter");
                 // If anything is hidden then toggle everything back on.
                 if (sankeyDiagramDataView.nodes.filter(n => n.hide).length > 0) {
