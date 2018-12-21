@@ -733,7 +733,6 @@ module powerbi.extensibility.visual {
         }
 
         private clickNodeAndShowChildren(node: SankeyDiagramNode, doForward: boolean, doBackward: boolean): void {
-            console.log("clickNodeAndShowChildren: node=" + node.label.name + ", doForward=" + doForward + ", doBackward=" + doBackward + ", linkCount=" + node.links.length);
             // Prevent loops.
             if (!node.hide) {
                 return;
@@ -741,8 +740,6 @@ module powerbi.extensibility.visual {
 
             node.hide = false;
             node.links.forEach((link: SankeyDiagramLink) => {
-                console.log("nodeLinks: destLabel=" + link.destination.label.name + ", destHide=" + link.destination.hide +
-                            ", sourceLabel=" + link.source.label.name + ", sourceHide=" + link.source.hide);
                 if (doForward && link.source.label.name === node.label.name) {
                     link.hide = false;
                     this.clickNodeAndShowChildren(link.destination, true, false);
@@ -750,9 +747,6 @@ module powerbi.extensibility.visual {
                 if (doBackward && link.destination.label.name === node.label.name) {
                     link.hide = false;
                     this.clickNodeAndShowChildren(link.source, false, true);
-                }
-                if (link.hide) {
-                    console.log("Link not hidden.");
                 }
             });
         }
@@ -1917,7 +1911,8 @@ module powerbi.extensibility.visual {
                 this.renderNodes(sankeyDiagramDataView);
                 this.renderLinks(sankeyDiagramDataView);
             })
-            .on("click", (link: SankeyDiagramLink) => {
+            .on("click.filter", (link: SankeyDiagramLink) => {
+                console.log("click.filter");
                 // If anything is hidden then toggle everything back on.
                 if (sankeyDiagramDataView.nodes.filter(n => n.hide).length > 0) {
                     this.setHideValueForAllNodesAndLinks(sankeyDiagramDataView, false);
